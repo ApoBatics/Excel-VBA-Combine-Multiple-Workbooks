@@ -1,0 +1,50 @@
+Public Sub CombineWorkbooksProcedure()
+    Application.ScreenUpdating = False
+    'Open Main Workbook
+    Workbooks.Open (ThisWorkbook.Path & "\Combine Workbooks\Main Workbook.xlsx")
+    'get the number of files to be combined
+    ThisWorkbook.Activate
+    lngNumOfFilesToBeCombined = Range("B2").Value
+    For i = 1 To lngNumOfFilesToBeCombined
+        'Open Minor Workbook
+        Workbooks.Open (ThisWorkbook.Path & "\Combine Workbooks\Workbook " & i & ".xlsx")
+        'remove the filter from the minor workbook
+        On Error Resume Next
+        Sheets("Sheet1").Select
+        Sheets("Sheet1").ShowAllData
+        On Error GoTo 0
+        'copy headers (for the first workbook only)
+        If i = 1 Then
+            Windows("Workbook " & i & ".xlsx").Activate
+            Range("1:1").Copy
+            Windows("Main Workbook.xlsx").Activate
+            Range("A1").Select
+            ActiveSheet.Paste
+            Range("1:1").AutoFilter
+            Cells.Select
+            Selection.EntireColumn.AutoFit
+            Range("A2").Select
+        End If
+        Windows("Workbook " & i & ".xlsx").Activate
+        lngMinorNumbOfRows = [counta(A:A)]
+        lngNumbOfCols = [counta(1:1)]
+        Range(Cells(2, 1), Cells(lngMinorNumbOfRows, lngNumbOfCols)).Select
+        Selection.Copy
+        Windows("Main Workbook.xlsx").Activate
+        'first blank row
+        lngMainNumbOfRows = [counta(A:A)] + 1
+        Range("A" & lngMainNumbOfRows).Select
+        ActiveSheet.Paste
+        Application.CutCopyMode = False
+        If [counta(A:A)] > 1 Then
+            Range("A2:A" & [counta(A:A)]).FormulaR1C1 = "=ROW()-1"
+        End If
+        Cells.Select
+        Selection.EntireColumn.AutoFit
+        Range("A2").Select
+        Windows("Workbook " & i & ".xlsx").Close False
+    Next i
+    Windows("Main Workbook.xlsx").Close True
+    Application.ScreenUpdating = True
+    MsgBox "Done!!!", vbInformation + vbOKOnly, "Success"
+End Sub
